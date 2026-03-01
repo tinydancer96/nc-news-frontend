@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import { use } from "react";
+import { PostComment } from "./PostComment";
+import { UserContext } from "./UserContext";
 export function Article() {
   const { article_id } = useParams();
   const [article, setArticle] = useState({});
@@ -9,6 +10,9 @@ export function Article() {
   const [showComments, setShowComments] = useState(false);
   const [displayCommentList, setDisplayCommentList] = useState({});
   const [voteArticle, setVoteArticle] = useState(0);
+  const [deleteComment, setDeleteComment] = useState(null);
+  const [confirmDeleteComment, setConfirmDeleteComment] = useState([]);
+  const { user } = useContext(UserContext);
 
   // fetching data for article
   useEffect(() => {
@@ -60,6 +64,23 @@ export function Article() {
       });
   }, [voteArticle]);
 
+  useEffect(() => {
+    if (deleteComment === null) return;
+    axios
+      .delete(`https://nc-news-zi98.onrender.com/api/comments/${deleteComment}`)
+      .then((response) => {
+        console.log(response.data);
+        // setConfirmDeleteComment(true);
+      })
+      .catch((error) => {
+        console.log(error);
+      })
+      .finally(() => {
+        setDeleteComment(null);
+        // setConfirmDeleteComment(false);
+      });
+  }, [deleteComment]);
+
   if (isLoading) {
     return "Loading...";
   }
@@ -83,13 +104,13 @@ export function Article() {
       {!isLoading && (
         <div>
           <div>
+            <h2>{title}</h2>
+            <p>{body}</p>
+            <img src={img} alt="" />
             <div className="article-info-icons">
               <p>👩‍🦰{author}</p>
               <p>🕰️{created}</p>
             </div>
-            <h2>{title}</h2>
-            <p>{body}</p>
-            <img src={img} alt="" />
             <div className="article-info-icons">
               <p>💬{commentCount}</p>
               <p>❤️{votes}</p>
@@ -114,15 +135,39 @@ export function Article() {
           </div>
 
           <div>
+            <PostComment
+              articleId={article_id}
+              setDisplayCommentList={setDisplayCommentList}
+            ></PostComment>
             {showComments &&
               displayCommentList.comments &&
               displayCommentList.comments.map((comment) => (
                 <div key={comment.comment_id}>
-                  <p>{comment.body}</p>
                   <div className="comment-info-icons">
+                    {!confirmDeleteComment.includes(comment.comment_id) ? (
+                      <p>{comment.body}</p>
+                    ) : (
+                      <p>Comment has been deleted</p>
+                    )}
+
                     <p>👩‍🦰{comment.author}</p>
                     <p>❤️{comment.votes}</p>
                     <p>🕰️{comment.created_at}</p>
+                    {comment.author === user.username && (
+                      <button
+                        onClick={() => {
+                          setDeleteComment(comment.comment_id);
+                          setConfirmDeleteComment((confirmDeleteComment) => {
+                            return [
+                              ...confirmDeleteComment,
+                              comment.comment_id,
+                            ];
+                          });
+                        }}
+                      >
+                        🗑️
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}

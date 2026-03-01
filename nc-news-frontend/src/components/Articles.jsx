@@ -28,10 +28,14 @@ export function Articles() {
           <Link to={`articles/${article.article_id}`}>
             <h2>{article.title}</h2>
             <div className="article-info-icons">
-              <p>👩‍🦰 {article.author}</p>
-              <p>💬 {article.comment_count}</p>
-              <p>❤️{article.votes}</p>
-              <img src={article.article_img_url} alt="" />
+              <div>
+                <img src={article.article_img_url} alt="" />
+              </div>
+              <div>
+                <p>👩‍🦰 {article.author}</p>
+                <p>💬 {article.comment_count}</p>
+                <p>❤️{article.votes}</p>
+              </div>
             </div>
           </Link>
         </div>
